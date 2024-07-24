@@ -268,9 +268,9 @@ describe OpenTelemetry::Instrumentation::PG::Instrumentation do
     end
 
     it 'extracts table name' do
-      client.query('CREATE TABLE test_table (id SERIAL PRIMARY KEY, name VARCHAR(50);')
+      client.query('CREATE TABLE IF NOT EXISTS test_table (personid int, name VARCHAR(50))')
 
-      _(span.attributes['db.collection.name']).must_equal 'table_name'
+      _(span.attributes['db.collection.name']).must_equal 'test_table'
     end
 
     describe 'when db_statement is obfuscate' do
