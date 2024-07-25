@@ -106,8 +106,7 @@ module OpenTelemetry
 
             attrs = { 'db.operation' => validated_operation(operation), 'db.postgresql.prepared_statement_name' => statement_name }
             attrs['db.statement'] = sql unless config[:db_statement] == :omit
-            collection_name = collection_name(text)
-            attrs['db.collection.name'] = collection_name unless collection_name.nil?
+            attrs['db.collection.name'] = collection_name(text)
             attrs.merge!(OpenTelemetry::Instrumentation::PG.attributes)
             attrs.compact!
 

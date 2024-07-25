@@ -17,7 +17,7 @@ require_relative '../../../../lib/opentelemetry/instrumentation/pg/patches/conne
 # - docker-compose build
 # 2. Bundle install
 # - docker-compose run ex-instrumentation-pg-test bundle install
-# 3. Install the Appraisal gem (https://github.com/thoughtbot/appraisal)
+# 3. Install the dependencies for each Appraisal (https://github.com/thoughtbot/appraisal)
 # - docker-compose run ex-instrumentation-pg-test bundle exec appraisal install
 # 4. Run test suite with Appraisal
 # - docker-compose run ex-instrumentation-pg-test bundle exec appraisal rake test
@@ -383,7 +383,7 @@ describe OpenTelemetry::Instrumentation::PG::Instrumentation do
       name = test_case['name']
       query = test_case['sql']
 
-      define_method(:"test_sql_obfuscation_#{name}") do
+      define_method(:"test_sql_table_name_#{name}") do
         table_name = client.send(:collection_name, query)
 
         assert('test_table', table_name)
