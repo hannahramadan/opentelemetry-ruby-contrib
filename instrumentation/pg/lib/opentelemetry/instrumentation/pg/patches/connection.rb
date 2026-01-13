@@ -144,13 +144,13 @@ module OpenTelemetry
           end
 
           def query_summary_cache
-            @query_summary_cache ||= OpenTelemetry::Helpers::QuerySummary::Cache.new(size: config[:query_summary_cache_size])
+            @query_summary_cache ||= OpenTelemetry::Helpers::SqlProcessor::QuerySummary::Cache.new(size: config[:query_summary_cache_size])
           end
 
           def generate_query_summary(sql, operation: nil, collection: nil)
             return unless sql && !sql.empty?
 
-            summary = OpenTelemetry::Helpers::QuerySummary.generate_summary(sql, cache: query_summary_cache)
+            summary = OpenTelemetry::Helpers::SqlProcessor::QuerySummary.generate_summary(sql, cache: query_summary_cache)
             summary == 'UNKNOWN' ? handle_unknown_query_summary(operation, collection) : summary
           end
 
