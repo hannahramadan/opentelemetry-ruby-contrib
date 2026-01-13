@@ -464,6 +464,52 @@ describe OpenTelemetry::Instrumentation::PG::Instrumentation do
       end
     end
 
+    describe 'query_summary' do
+      let(:config) { { db_statement: :include, query_summary_enabled: true } }
+
+      it 'generates correct summaries' do
+        data = File.read("#{Dir.pwd}/test/fixtures/query_summary.json")
+        test_cases = JSON.parse(data)
+
+        test_cases.each do |test_case|
+          name = test_case['name']
+          sql = test_case['sql']
+          expected_summary = test_case['expected_summary']
+
+          exporter.reset
+
+          expect do
+            client.exec(sql)
+          end.must_raise PG::UndefinedTable
+
+          _(last_span.attributes['db.query.summary']).must_equal expected_summary,
+            "Failed for test case '#{name}': SQL '#{sql}'"
+        end
+      end
+
+      it 'generates summary for prepared statements' do
+        client.prepare('test_stmt', 'SELECT * FROM users WHERE id = $1')
+        client.exec_prepared('test_stmt', [1])
+
+        prepare_span = exporter.finished_spans[-2]
+        _(prepare_span.attributes['db.query.summary']).must_equal 'SELECT users'
+
+        _(last_span.attributes['db.query.summary']).must_equal 'SELECT users'
+      end
+    end
+
+    describe 'when query_summary is disabled' do
+      let(:config) { { db_statement: :include, query_summary_enabled: false } }
+
+      it 'does not include query summary attribute' do
+        expect do
+          client.exec('SELECT * FROM users WHERE id = 1')
+        end.must_raise PG::UndefinedTable
+
+        _(last_span.attributes.key?('db.query.summary')).must_equal false
+      end
+    end
+
     describe '#connection_name' do
       def self.load_fixture
         data = File.read("#{Dir.pwd}/test/fixtures/sql_table_name.json")

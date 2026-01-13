@@ -1,0 +1,62 @@
+[
+  {
+    "name": "simple_select",
+    "sql": "SELECT * FROM users",
+    "expected_summary": "SELECT users"
+  },
+  {
+    "name": "select_with_where",
+    "sql": "SELECT * FROM users WHERE id = 1",
+    "expected_summary": "SELECT users"
+  },
+  {
+    "name": "select_with_join",
+    "sql": "SELECT u.name, p.title FROM users u JOIN posts p ON u.id = p.user_id",
+    "expected_summary": "SELECT users posts"
+  },
+  {
+    "name": "insert_into",
+    "sql": "INSERT INTO orders (user_id, total) VALUES (123, 45.67)",
+    "expected_summary": "INSERT orders"
+  },
+  {
+    "name": "update_table",
+    "sql": "UPDATE users SET name = 'John' WHERE id = 1",
+    "expected_summary": "UPDATE users"
+  },
+  {
+    "name": "delete_from",
+    "sql": "DELETE FROM posts WHERE created_at < '2023-01-01'",
+    "expected_summary": "DELETE posts"
+  },
+  {
+    "name": "create_table",
+    "sql": "CREATE TABLE products (id INT, name VARCHAR(50))",
+    "expected_summary": "CREATE TABLE products"
+  },
+  {
+    "name": "complex_select_with_subquery",
+    "sql": "SELECT * FROM (SELECT * FROM users WHERE active = true) AS active_users",
+    "expected_summary": "SELECT users"
+  },
+  {
+    "name": "select_with_union",
+    "sql": "SELECT name FROM users UNION SELECT name FROM customers",
+    "expected_summary": "SELECT users customers"
+  },
+  {
+    "name": "with_clause",
+    "sql": "WITH recent AS (SELECT * FROM orders WHERE date > '2023-01-01') SELECT * FROM recent",
+    "expected_summary": "WITH recent SELECT orders SELECT recent"
+  },
+  {
+    "name": "prepared_statement_style",
+    "sql": "SELECT * FROM users WHERE id = $1 AND status = $2",
+    "expected_summary": "SELECT users"
+  },
+  {
+    "name": "multiple_tables_join",
+    "sql": "SELECT o.id, u.name, p.title FROM orders o JOIN users u ON o.user_id = u.id JOIN products p ON o.product_id = p.id",
+    "expected_summary": "SELECT orders users products"
+  }
+]

@@ -27,6 +27,8 @@ module OpenTelemetry
         option :peer_service, default: nil, validate: :string
         option :db_statement, default: :obfuscate, validate: %I[omit include obfuscate]
         option :obfuscation_limit, default: 2000, validate: :integer
+        option :query_summary_enabled, default: false, validate: :boolean
+        option :query_summary_cache_size, default: 1000, validate: :integer
 
         private
 

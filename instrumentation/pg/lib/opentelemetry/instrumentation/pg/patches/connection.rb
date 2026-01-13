@@ -143,6 +143,21 @@ module OpenTelemetry
             @lru_cache ||= LruCache.new(50)
           end
 
+          def query_summary_cache
+            @query_summary_cache ||= OpenTelemetry::Helpers::QuerySummary::Cache.new(size: config[:query_summary_cache_size])
+          end
+
+          def generate_query_summary(sql, operation: nil, collection: nil)
+            return unless sql && !sql.empty?
+
+            summary = OpenTelemetry::Helpers::QuerySummary.generate_summary(sql, cache: query_summary_cache)
+            summary == 'UNKNOWN' ? handle_unknown_query_summary(operation, collection) : summary
+          end
+
+          def handle_unknown_query_summary(operation, collection)
+            [operation, collection].compact.join(' ')
+          end
+
           # Rubocop is complaining about 19.31/18 for Metrics/AbcSize.
           # But, getting that metric in line would force us over the
           # module size limit! We can't win here unless we want to start
@@ -166,13 +181,24 @@ module OpenTelemetry
               end
             end
 
-            attrs = { 'db.operation' => validated_operation(operation), 'db.postgresql.prepared_statement_name' => statement_name }
+            validated_op = validated_operation(operation)
+            collection = collection_name(text)
+
+            attrs = { 'db.operation' => validated_op, 'db.postgresql.prepared_statement_name' => statement_name }
             attrs['db.statement'] = sql unless config[:db_statement] == :omit
-            attrs['db.collection.name'] = collection_name(text)
+            attrs['db.collection.name'] = collection
+
+            if config[:query_summary_enabled]
+              summary = generate_query_summary(sql || text, operation: validated_op, collection: collection)
+              attrs['db.query.summary'] = summary
+            else
+              summary = validated_op
+            end
+
             attrs.merge!(OpenTelemetry::Instrumentation::PG.attributes)
             attrs.compact!
 
-            [span_name(operation), client_attributes.merge(attrs)]
+            [span_name(summary), client_attributes.merge(attrs)]
           end
 
           def extract_operation(sql)
@@ -182,8 +208,8 @@ module OpenTelemetry
             sql.to_s.sub(comment_regex, '').split[0].to_s.upcase
           end
 
-          def span_name(operation)
-            [validated_operation(operation), db].compact.join(' ')
+          def span_name(operation_or_summary)
+            [operation_or_summary, db].compact.join(' ')
           end
 
           def validated_operation(operation)
